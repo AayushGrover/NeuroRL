@@ -1,26 +1,33 @@
 import numpy as np 
 import math
+import matplotlib.pyplot as plt; plt.rcdefaults()
+
 b = np.load('feature_Segment01.npy') 
 
-entropies = list()
+frames = []
+window_size = 20
+for i in range(2,490):
+    l = b[i:i+20]
+    entropy = np.var(l, axis=0)  # Calculate variance
+    l1_norm = np.linalg.norm(entropy)
+    # print(l1_norm)
+    frames.append(l1_norm)
+threshold = 0.45
+index = list()
+for i in range(487):
+    if(frames[i+1] - frames[i] > threshold):
+        index.append(i) 
+print ("Timestamps:")
+for i in index:
+    print (i/len(frames) * 300) # timestamp of the ith frame                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 
-
-for window_size in range(2,512):
-    l = b[0:window_size]
-    var = np.var(l,axis = 0)  # Calculate variance
-    entropy = list()
-    for t in var:
-        # If entropy throws an error becuase of zero variance uncomment this code
-        if (t == 0):
-            entropy.append(0) # In case variance is zero
-        else:
-            entropy.append(( 1/2 * math.log(2* math.pi * math.e * t *t))) # calculate entropy for each window size
-    entropies.append(entropy)
-    
-L1_norm = list()
-for i in range(2,509):
-    L1_norm.append(np.linalg.norm(np.asarray(entropies[i])-np.asarray(entropies[i+1])))
-
-print (L1_norm) # This is the L1 norm between 0 : k frame and 0 : k+1 th frame 
+y_pos = list()
+for i in range(488):
+    y_pos.append(i)
+performance = frames 
+plt.xlabel("timestamp windows")
+plt.ylabel("Norm of entropy")
+plt.bar(y_pos, performance, align='center', alpha=0.5)
+plt.show()
 
 # So we can check if the enropy for the k+1 th frame increased or decreased and decide the split accordingly
