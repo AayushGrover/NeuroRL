@@ -1,6 +1,7 @@
 import numpy as np 
 import math
 import matplotlib.pyplot as plt; plt.rcdefaults() 
+import datetime
 
 def get_entropy(all_frames, window_size=20):
     frames = []
@@ -50,9 +51,9 @@ def plot(frames, smoothing_factor):
     
     return y_pos, smooth_performance
 
-def check(timestamp, seq, performance):
+def check(timestamp, seq, l):
     for t,_ in seq:
-        if abs((t/len(performance)*300)-(timestamp/len(performance)*300)) < 2:
+        if abs((t/l*300)-(timestamp/l*300)) < 2:
             return False
     return True
 
@@ -65,7 +66,7 @@ def get_top_k_performance(y_pos, performance_list, k):
     top_k_pairs = [performance_for_top_k[0]]
     k_count = 1
     for t,performance in performance_for_top_k:
-        if abs(performance - top_k_pairs[-1][1]) > 0.2 and check(t,top_k_pairs,performance_list):
+        if abs(performance - top_k_pairs[-1][1]) > 0.2 and check(t,top_k_pairs,len(performance_list)):
             top_k_pairs.append((t,performance))
             k_count += 1
         if k_count == k:
@@ -74,7 +75,7 @@ def get_top_k_performance(y_pos, performance_list, k):
 
     top_k_pairs.sort(key=lambda x: x[0])
     for (t, _) in top_k_pairs:
-        print(f'Frame at which segmentation should happen: {t}, Time at which segmentation should happen: {t/len(performance_list)*300}')
+        print(f'Frame at which segmentation should happen: {t}, Time at which segmentation should happen: {datetime.timedelta(seconds=(t/len(performance_list)*300))}')
 
 # So we can check if the enropy for the k+1 th frame increased or decreased and decide the split accordingly
 
@@ -83,5 +84,5 @@ if __name__ == "__main__":
     b = np.load('feature_Segment01.npy')
     
     frames = get_entropy(b)
-    y_pos, performance = plot(frames, smoothing_factor=10)
+    y_pos, performance = plot(frames, smoothing_factor=3)
     get_top_k_performance(y_pos, performance,k=15)
