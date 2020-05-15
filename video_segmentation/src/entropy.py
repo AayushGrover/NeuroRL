@@ -2,6 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt; plt.rcdefaults() 
 import datetime
+from statistics import mean
 
 def get_entropy(all_frames, n, window_size=20):
     frames = []
@@ -59,15 +60,34 @@ def check(timestamp, seq, l):
             return False
     return True
 
+def get_scores(l, avg_factor=7):
+    scores = list()
+    n=len(l)
+    for (i,_) in l:
+        if i-avg_factor >= 0 and i+avg_factor < n:
+            window = [perf[1] for perf in l[i-avg_factor+1:i+avg_factor-1]]
+            
+            e_avg = np.mean(np.array(window))
+            e_max = max(window)
+            e_min = min(window)
+            score = 2*e_avg - l[i-avg_factor][1] - l[i+avg_factor][1] - (e_max - e_min) 
+            scores.append((i,score))
+        else:
+            continue
+    return scores
+
 def get_top_k_performance(y_pos, performance_list, k):
     performance_for_top_k = list()
     for (x, y) in zip(y_pos, performance_list):
         performance_for_top_k.append((x, y))
-    performance_for_top_k.sort(key=lambda x: x[1])
-    # top_k_pairs = performance_for_top_k[:k]
-    # print(performance_for_top_k[:10])
+
+    scores = get_scores(performance_for_top_k)
+    scores.sort(key=lambda z: z[1], reverse=True)
+    
+    performance_for_top_k = scores
     top_k_pairs = [performance_for_top_k[0]]
     k_count = 1
+    
     for t,performance in performance_for_top_k:
         if check(t,top_k_pairs,len(performance_list)):
             top_k_pairs.append((t,performance))
